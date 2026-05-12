@@ -1,0 +1,1399 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SHAIKH INFOTECH — Digital Agency</title>
+
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <!-- Google Fonts: Syne (display) + DM Sans (body) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;1,9..40,300&display=swap" rel="stylesheet" />
+
+  <!-- AOS (Animate On Scroll) -->
+  <link rel="stylesheet" href="https://unpkg.com/aos@2.3.1/dist/aos.css" />
+  <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
+
+  <!-- GSAP for hero animations -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
+
+  <!-- Firebase v10 (CDN / compat) -->
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
+
+  <script>
+    /* ──────────────────────────────────────────────
+       TAILWIND CONFIG — extend with custom values
+    ────────────────────────────────────────────── */
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            syne: ['Syne', 'sans-serif'],
+            dm:   ['DM Sans', 'sans-serif'],
+          },
+          colors: {
+            void:   '#050509',
+            slate1: '#0d0d14',
+            slate2: '#12121c',
+            accent: '#7c6bff',
+            accent2:'#c86bff',
+            neon:   '#5affd8',
+          },
+          backgroundImage: {
+            'gradient-radial': 'radial-gradient(var(--tw-gradient-stops))',
+          },
+        }
+      }
+    }
+  </script>
+
+  <style>
+    /* ── Base ─────────────────────────────────────── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      background-color: #050509;
+      color: #e8e8f0;
+      font-family: 'DM Sans', sans-serif;
+      overflow-x: hidden;
+      cursor: none; /* custom cursor */
+    }
+
+    /* ── Custom Cursor ────────────────────────────── */
+    #cursor-dot {
+      width: 8px; height: 8px;
+      background: #7c6bff;
+      border-radius: 50%;
+      position: fixed; top: 0; left: 0;
+      pointer-events: none;
+      z-index: 9999;
+      transition: transform 0.1s ease;
+    }
+    #cursor-ring {
+      width: 36px; height: 36px;
+      border: 1.5px solid rgba(124,107,255,0.5);
+      border-radius: 50%;
+      position: fixed; top: 0; left: 0;
+      pointer-events: none;
+      z-index: 9998;
+      transition: transform 0.18s ease, width 0.25s ease, height 0.25s ease, border-color 0.25s ease;
+    }
+    body:has(a:hover) #cursor-ring,
+    body:has(button:hover) #cursor-ring {
+      width: 56px; height: 56px;
+      border-color: rgba(124,107,255,0.9);
+    }
+
+    /* ── Particle Canvas ──────────────────────────── */
+    #particle-canvas {
+      position: fixed; inset: 0;
+      pointer-events: none;
+      z-index: 0;
+      opacity: 0.55;
+    }
+
+    /* ── Glassmorphism base ───────────────────────── */
+    .glass {
+      background: rgba(255,255,255,0.04);
+      backdrop-filter: blur(18px) saturate(150%);
+      -webkit-backdrop-filter: blur(18px) saturate(150%);
+      border: 1px solid rgba(255,255,255,0.08);
+    }
+    .glass-strong {
+      background: rgba(12,12,22,0.75);
+      backdrop-filter: blur(28px) saturate(160%);
+      -webkit-backdrop-filter: blur(28px) saturate(160%);
+      border: 1px solid rgba(255,255,255,0.10);
+    }
+
+    /* ── Gradient text ────────────────────────────── */
+    .grad-text {
+      background: linear-gradient(135deg, #7c6bff 0%, #c86bff 45%, #5affd8 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    .grad-text-2 {
+      background: linear-gradient(90deg, #e8e8f0 0%, #9090b8 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    /* ── Navbar ───────────────────────────────────── */
+    #navbar {
+      position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+      transition: background 0.4s ease, box-shadow 0.4s ease;
+    }
+    #navbar.scrolled {
+      background: rgba(5,5,9,0.82);
+      backdrop-filter: blur(24px);
+      -webkit-backdrop-filter: blur(24px);
+      box-shadow: 0 1px 0 rgba(255,255,255,0.06);
+    }
+
+    /* ── Hero headline ────────────────────────────── */
+    #hero-headline {
+      font-family: 'Syne', sans-serif;
+      font-weight: 800;
+      line-height: 1.0;
+      letter-spacing: -0.03em;
+    }
+
+    /* ── Glow orbs ────────────────────────────────── */
+    .orb {
+      position: absolute;
+      border-radius: 50%;
+      filter: blur(90px);
+      opacity: 0.25;
+      pointer-events: none;
+      animation: float-orb 12s ease-in-out infinite alternate;
+    }
+    .orb-1 { background: #7c6bff; width: 480px; height: 480px; top: -120px; left: -80px; animation-delay: 0s; }
+    .orb-2 { background: #c86bff; width: 360px; height: 360px; top: 20%; right: -60px; animation-delay: -3s; }
+    .orb-3 { background: #5affd8; width: 280px; height: 280px; bottom: 5%; left: 30%; animation-delay: -6s; opacity: 0.15; }
+
+    @keyframes float-orb {
+      from { transform: translate(0,0) scale(1); }
+      to   { transform: translate(30px, 40px) scale(1.08); }
+    }
+
+    /* ── Bento Grid ───────────────────────────────── */
+    .bento-card {
+      border-radius: 20px;
+      padding: 2rem;
+      position: relative;
+      overflow: hidden;
+      transition: transform 0.35s cubic-bezier(.22,1,.36,1), box-shadow 0.35s ease;
+    }
+    .bento-card:hover {
+      transform: translateY(-6px) scale(1.015);
+      box-shadow: 0 24px 64px rgba(124,107,255,0.18);
+    }
+    .bento-card::before {
+      content: '';
+      position: absolute; inset: 0;
+      background: radial-gradient(circle at 30% 20%, rgba(124,107,255,0.10), transparent 60%);
+      pointer-events: none;
+    }
+    .bento-icon {
+      font-size: 2.4rem;
+      margin-bottom: 1rem;
+      display: block;
+    }
+
+    /* ── Scroll indicator ─────────────────────────── */
+    @keyframes bounce-y {
+      0%, 100% { transform: translateY(0); }
+      50%       { transform: translateY(8px); }
+    }
+    .bounce-anim { animation: bounce-y 1.8s ease-in-out infinite; }
+
+    /* ── Modal backdrop ───────────────────────────── */
+    #auth-modal-backdrop {
+      position: fixed; inset: 0;
+      background: rgba(0,0,0,0.7);
+      backdrop-filter: blur(6px);
+      z-index: 200;
+      display: flex; align-items: center; justify-content: center;
+      opacity: 0; pointer-events: none;
+      transition: opacity 0.3s ease;
+    }
+    #auth-modal-backdrop.open {
+      opacity: 1; pointer-events: all;
+    }
+    #auth-modal {
+      width: 420px; max-width: 94vw;
+      border-radius: 24px;
+      padding: 2.5rem;
+      transform: translateY(32px) scale(0.97);
+      transition: transform 0.4s cubic-bezier(.22,1,.36,1), opacity 0.3s ease;
+      opacity: 0;
+    }
+    #auth-modal-backdrop.open #auth-modal {
+      transform: translateY(0) scale(1);
+      opacity: 1;
+    }
+
+    /* ── Form inputs ──────────────────────────────── */
+    .field {
+      width: 100%;
+      background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(255,255,255,0.10);
+      border-radius: 10px;
+      padding: 0.8rem 1rem;
+      color: #e8e8f0;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 0.9rem;
+      transition: border-color 0.2s ease, box-shadow 0.2s ease;
+      outline: none;
+    }
+    .field::placeholder { color: rgba(232,232,240,0.35); }
+    .field:focus {
+      border-color: rgba(124,107,255,0.6);
+      box-shadow: 0 0 0 3px rgba(124,107,255,0.12);
+    }
+    select.field option { background: #12121c; }
+
+    /* ── Primary button ───────────────────────────── */
+    .btn-primary {
+      background: linear-gradient(135deg, #7c6bff, #c86bff);
+      color: #fff;
+      font-family: 'Syne', sans-serif;
+      font-weight: 600;
+      border: none;
+      border-radius: 10px;
+      padding: 0.8rem 1.6rem;
+      cursor: pointer;
+      transition: opacity 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
+      letter-spacing: 0.01em;
+    }
+    .btn-primary:hover {
+      opacity: 0.88;
+      transform: translateY(-1px);
+      box-shadow: 0 8px 28px rgba(124,107,255,0.35);
+    }
+    .btn-primary:active { transform: translateY(0); }
+
+    /* ── Dashboard ────────────────────────────────── */
+    #dashboard {
+      min-height: 100vh;
+      padding: 2rem;
+      display: none; /* shown via JS */
+    }
+
+    /* ── Status pill ──────────────────────────────── */
+    .status-pill {
+      font-size: 0.72rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.07em;
+      padding: 0.25rem 0.75rem;
+      border-radius: 100px;
+      font-family: 'Syne', sans-serif;
+    }
+    .status-pending  { background: rgba(255,190,50,0.15);  color: #ffbe32; border: 1px solid rgba(255,190,50,0.25); }
+    .status-working  { background: rgba(90,255,216,0.12);  color: #5affd8; border: 1px solid rgba(90,255,216,0.25); }
+    .status-fixed    { background: rgba(124,107,255,0.15); color: #a89bff; border: 1px solid rgba(124,107,255,0.3); }
+    .status-completed{ background: rgba(124,107,255,0.15); color: #a89bff; border: 1px solid rgba(124,107,255,0.3); }
+
+    /* ── Request card ─────────────────────────────── */
+    .request-card {
+      border-radius: 16px;
+      padding: 1.2rem 1.5rem;
+      margin-bottom: 0.85rem;
+      animation: slide-in 0.4s cubic-bezier(.22,1,.36,1) both;
+    }
+    @keyframes slide-in {
+      from { opacity: 0; transform: translateX(18px); }
+      to   { opacity: 1; transform: translateX(0); }
+    }
+
+    /* ── Section headings ─────────────────────────── */
+    .section-label {
+      font-family: 'Syne', sans-serif;
+      font-size: 0.72rem;
+      font-weight: 700;
+      letter-spacing: 0.22em;
+      text-transform: uppercase;
+      color: #7c6bff;
+    }
+
+    /* ── Noise overlay (texture) ──────────────────── */
+    body::after {
+      content: '';
+      position: fixed; inset: 0;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='1'/%3E%3C/svg%3E");
+      opacity: 0.03;
+      pointer-events: none;
+      z-index: 9997;
+    }
+
+    /* ── Alert toast ──────────────────────────────── */
+    #toast {
+      position: fixed; bottom: 2rem; right: 2rem;
+      padding: 0.9rem 1.5rem;
+      border-radius: 12px;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 0.88rem;
+      z-index: 9990;
+      transform: translateY(20px);
+      opacity: 0;
+      transition: opacity 0.3s ease, transform 0.3s ease;
+      pointer-events: none;
+    }
+    #toast.show {
+      opacity: 1;
+      transform: translateY(0);
+    }
+    #toast.success { background: rgba(90,255,216,0.15); border: 1px solid rgba(90,255,216,0.3); color: #5affd8; }
+    #toast.error   { background: rgba(255,80,80,0.15);  border: 1px solid rgba(255,80,80,0.3);  color: #ff8080; }
+
+    /* ── Loading spinner ──────────────────────────── */
+    .spinner {
+      width: 20px; height: 20px;
+      border: 2px solid rgba(255,255,255,0.15);
+      border-top-color: #fff;
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+      display: inline-block;
+      vertical-align: middle;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ── Marquee ticker ───────────────────────────── */
+    .marquee-wrap { overflow: hidden; white-space: nowrap; }
+    .marquee-inner {
+      display: inline-block;
+      animation: marquee 28s linear infinite;
+    }
+    @keyframes marquee {
+      from { transform: translateX(0); }
+      to   { transform: translateX(-50%); }
+    }
+
+    /* ── Responsive tweaks ────────────────────────── */
+    @media (max-width: 640px) {
+      #hero-headline { font-size: clamp(2.8rem, 12vw, 5rem); }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ╔══════════════════════════════════════════╗ -->
+  <!-- ║         CUSTOM CURSOR ELEMENTS           ║ -->
+  <!-- ╚══════════════════════════════════════════╝ -->
+  <div id="cursor-dot"></div>
+  <div id="cursor-ring"></div>
+
+  <!-- ╔══════════════════════════════════════════╗ -->
+  <!-- ║         PARTICLE BACKGROUND CANVAS       ║ -->
+  <!-- ╚══════════════════════════════════════════╝ -->
+  <canvas id="particle-canvas"></canvas>
+
+  <!-- ╔══════════════════════════════════════════╗ -->
+  <!-- ║         TOAST NOTIFICATION               ║ -->
+  <!-- ╚══════════════════════════════════════════╝ -->
+  <div id="toast"></div>
+
+  <!-- ╔══════════════════════════════════════════╗ -->
+  <!-- ║   LANDING PAGE  (shown before login)     ║ -->
+  <!-- ╚══════════════════════════════════════════╝ -->
+  <div id="landing-page">
+
+    <!-- ── STICKY GLASSMORPHISM NAVBAR ──────────── -->
+    <nav id="navbar" class="px-6 md:px-14 py-4 flex items-center justify-between">
+      <!-- Logo -->
+      <a href="#" class="flex items-center gap-2.5 group">
+        <span class="w-8 h-8 rounded-lg flex items-center justify-center"
+              style="background: linear-gradient(135deg,#7c6bff,#c86bff);">
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+            <path d="M8 1L15 5V11L8 15L1 11V5L8 1Z" fill="white" fill-opacity="0.9"/>
+          </svg>
+        </span>
+        <span class="font-syne font-800 text-lg tracking-tight text-white">SHAIKH INFOTECH</span>
+      </a>
+
+      <!-- Nav links (desktop) -->
+      <div class="hidden md:flex items-center gap-8 text-sm font-dm text-white/60">
+        <a href="#services" class="hover:text-white transition-colors duration-200">Services</a>
+        <a href="#process"  class="hover:text-white transition-colors duration-200">Process</a>
+        <a href="#work"     class="hover:text-white transition-colors duration-200">Work</a>
+        <a href="#contact"  class="hover:text-white transition-colors duration-200">Contact</a>
+      </div>
+
+      <!-- CTA -->
+      <button id="client-access-btn" class="btn-primary text-sm px-5 py-2.5">
+        Client Access →
+      </button>
+    </nav>
+
+    <!-- ── HERO SECTION ──────────────────────────── -->
+    <section class="relative min-h-screen flex flex-col items-center justify-center text-center px-6 overflow-hidden pt-20">
+
+      <!-- Ambient orbs -->
+      <div class="orb orb-1"></div>
+      <div class="orb orb-2"></div>
+      <div class="orb orb-3"></div>
+
+      <!-- Content wrapper -->
+      <div class="relative z-10 max-w-5xl mx-auto">
+
+        <!-- Eyebrow label -->
+        <div id="hero-eyebrow" class="inline-flex items-center gap-2 mb-7 opacity-0">
+          <span class="w-1.5 h-1.5 rounded-full bg-neon animate-pulse"></span>
+          <span class="section-label">Award-Winning Digital Studio — Est. 2024</span>
+        </div>
+
+        <!-- Main headline -->
+        <h1 id="hero-headline" class="text-[clamp(3.5rem,9vw,8rem)] text-white mb-6 opacity-0">
+          Building<br/>
+          <span class="grad-text">Digital</span><br/>
+          Realities
+        </h1>
+
+        <!-- Sub-headline -->
+        <p id="hero-sub" class="text-lg md:text-xl text-white/50 max-w-xl mx-auto mb-10 font-light opacity-0">
+          We craft immersive web experiences, scalable applications, and cloud-native infrastructures that push the boundaries of what's possible online.
+        </p>
+
+        <!-- CTA row -->
+        <div id="hero-ctas" class="flex flex-col sm:flex-row items-center justify-center gap-4 opacity-0">
+          <button class="btn-primary px-8 py-3.5 text-base" onclick="document.getElementById('services').scrollIntoView({behavior:'smooth'})">
+            Explore Services
+          </button>
+          <a href="#work" class="text-white/60 hover:text-white text-sm flex items-center gap-2 transition-colors duration-200">
+            <span>View our work</span>
+            <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+              <path d="M1 7H13M7 1L13 7L7 13" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </a>
+        </div>
+
+        <!-- Stats row -->
+        <div id="hero-stats" class="mt-16 grid grid-cols-3 gap-6 max-w-lg mx-auto opacity-0">
+          <div>
+            <div class="font-syne font-800 text-3xl text-white">140<span class="text-accent">+</span></div>
+            <div class="text-xs text-white/40 mt-1">Projects Shipped</div>
+          </div>
+          <div class="border-x border-white/08 px-6">
+            <div class="font-syne font-800 text-3xl text-white">98<span class="text-neon">%</span></div>
+            <div class="text-xs text-white/40 mt-1">Client Satisfaction</div>
+          </div>
+          <div>
+            <div class="font-syne font-800 text-3xl text-white">5<span class="text-accent2">★</span></div>
+            <div class="text-xs text-white/40 mt-1">Average Rating</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Scroll hint -->
+      <div class="absolute bottom-10 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2 text-white/30 text-xs bounce-anim">
+        <svg width="16" height="22" viewBox="0 0 16 22" fill="none">
+          <rect x="0.75" y="0.75" width="14.5" height="20.5" rx="7.25" stroke="currentColor" stroke-width="1.5"/>
+          <circle cx="8" cy="6" r="2" fill="currentColor" class="animate-bounce"/>
+        </svg>
+        <span class="font-syne text-[10px] tracking-widest uppercase">Scroll</span>
+      </div>
+    </section>
+
+    <!-- ── MARQUEE TICKER ─────────────────────────── -->
+    <div class="border-y border-white/06 py-4 my-4 overflow-hidden" data-aos="fade-up">
+      <div class="marquee-wrap">
+        <div class="marquee-inner text-white/20 font-syne text-sm tracking-widest uppercase">
+          Web Development &nbsp;&nbsp;✦&nbsp;&nbsp; Cloud Infrastructure &nbsp;&nbsp;✦&nbsp;&nbsp; App Engineering &nbsp;&nbsp;✦&nbsp;&nbsp; QA Testing &nbsp;&nbsp;✦&nbsp;&nbsp; UI/UX Design &nbsp;&nbsp;✦&nbsp;&nbsp; Performance Optimization &nbsp;&nbsp;✦&nbsp;&nbsp; DevOps &nbsp;&nbsp;✦&nbsp;&nbsp; Security Audits &nbsp;&nbsp;✦&nbsp;&nbsp; Web Development &nbsp;&nbsp;✦&nbsp;&nbsp; Cloud Infrastructure &nbsp;&nbsp;✦&nbsp;&nbsp; App Engineering &nbsp;&nbsp;✦&nbsp;&nbsp; QA Testing &nbsp;&nbsp;✦&nbsp;&nbsp; UI/UX Design &nbsp;&nbsp;✦&nbsp;&nbsp; Performance Optimization &nbsp;&nbsp;✦&nbsp;&nbsp; DevOps &nbsp;&nbsp;✦&nbsp;&nbsp; Security Audits &nbsp;&nbsp;✦&nbsp;&nbsp;
+        </div>
+      </div>
+    </div>
+
+    <!-- ── SERVICES SECTION — BENTO GRID ─────────── -->
+    <section id="services" class="py-24 px-6 md:px-14 max-w-7xl mx-auto">
+
+      <div class="mb-14 text-center" data-aos="fade-up">
+        <span class="section-label">What We Do</span>
+        <h2 class="font-syne font-800 text-4xl md:text-5xl text-white mt-3 mb-4">
+          Services Built for <span class="grad-text">Scale</span>
+        </h2>
+        <p class="text-white/45 max-w-lg mx-auto text-base">
+          From concept to deployment, we cover every layer of the digital stack.
+        </p>
+      </div>
+
+      <!-- BENTO GRID — 3-col asymmetric layout -->
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
+
+        <!-- Large card: Web Building -->
+        <div class="bento-card glass md:col-span-2 min-h-[260px]" data-aos="fade-up" data-aos-delay="0">
+          <span class="bento-icon">🌐</span>
+          <h3 class="font-syne font-700 text-2xl text-white mb-2">Web Building</h3>
+          <p class="text-white/50 text-sm leading-relaxed max-w-sm">
+            Custom, pixel-perfect websites and web apps engineered for performance, accessibility, and conversion. From landing pages to complex SaaS platforms.
+          </p>
+          <div class="mt-5 flex flex-wrap gap-2">
+            <span class="text-xs px-2.5 py-1 rounded-full border border-white/10 text-white/45">Next.js</span>
+            <span class="text-xs px-2.5 py-1 rounded-full border border-white/10 text-white/45">React</span>
+            <span class="text-xs px-2.5 py-1 rounded-full border border-white/10 text-white/45">GSAP</span>
+            <span class="text-xs px-2.5 py-1 rounded-full border border-white/10 text-white/45">WebGL</span>
+          </div>
+          <!-- decorative line art -->
+          <div class="absolute bottom-6 right-6 opacity-10">
+            <svg width="80" height="80" viewBox="0 0 80 80" fill="none">
+              <circle cx="40" cy="40" r="38" stroke="#7c6bff" stroke-width="1"/>
+              <path d="M20 40h40M40 20v40M26 26l28 28M54 26L26 54" stroke="#7c6bff" stroke-width="0.8"/>
+            </svg>
+          </div>
+        </div>
+
+        <!-- App Builds -->
+        <div class="bento-card glass min-h-[260px]" data-aos="fade-up" data-aos-delay="80">
+          <span class="bento-icon">📱</span>
+          <h3 class="font-syne font-700 text-xl text-white mb-2">App Builds</h3>
+          <p class="text-white/50 text-sm leading-relaxed">
+            Native & cross-platform mobile apps. iOS, Android, React Native, Flutter — shipped fast and maintained long-term.
+          </p>
+          <div class="mt-4 flex flex-wrap gap-2">
+            <span class="text-xs px-2.5 py-1 rounded-full border border-white/10 text-white/45">Flutter</span>
+            <span class="text-xs px-2.5 py-1 rounded-full border border-white/10 text-white/45">Swift</span>
+          </div>
+        </div>
+
+        <!-- Cloud Services -->
+        <div class="bento-card glass min-h-[280px]" data-aos="fade-up" data-aos-delay="160"
+             style="background: linear-gradient(135deg, rgba(124,107,255,0.08), rgba(200,107,255,0.05));">
+          <span class="bento-icon">☁️</span>
+          <h3 class="font-syne font-700 text-xl text-white mb-2">Cloud Services</h3>
+          <p class="text-white/50 text-sm leading-relaxed">
+            Architecture, migration, and management across AWS, Azure & GCP. Auto-scaling, cost-optimized, and secure.
+          </p>
+          <div class="mt-4 grid grid-cols-3 gap-2 text-center">
+            <div class="p-2 rounded-lg border border-white/08">
+              <div class="text-xl mb-0.5">🟡</div>
+              <div class="text-[10px] text-white/40">AWS</div>
+            </div>
+            <div class="p-2 rounded-lg border border-white/08">
+              <div class="text-xl mb-0.5">🔵</div>
+              <div class="text-[10px] text-white/40">Azure</div>
+            </div>
+            <div class="p-2 rounded-lg border border-white/08">
+              <div class="text-xl mb-0.5">🔴</div>
+              <div class="text-[10px] text-white/40">GCP</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Web Testing — large -->
+        <div class="bento-card glass md:col-span-2 min-h-[280px]" data-aos="fade-up" data-aos-delay="240"
+             style="background: linear-gradient(135deg, rgba(90,255,216,0.05), rgba(12,12,22,0.6));">
+          <span class="bento-icon">🐛</span>
+          <h3 class="font-syne font-700 text-2xl text-white mb-2">Web Testing & Bug Fixing</h3>
+          <p class="text-white/50 text-sm leading-relaxed max-w-md">
+            Comprehensive QA — manual & automated testing, performance audits, security scans, and surgical bug fixes. We break things so your users don't have to.
+          </p>
+          <div class="mt-5 flex gap-4">
+            <div class="text-center">
+              <div class="font-syne font-700 text-2xl text-neon">99.9%</div>
+              <div class="text-[10px] text-white/35 mt-0.5">Uptime SLA</div>
+            </div>
+            <div class="w-px bg-white/08"></div>
+            <div class="text-center">
+              <div class="font-syne font-700 text-2xl text-neon">&lt; 24h</div>
+              <div class="text-[10px] text-white/35 mt-0.5">Response Time</div>
+            </div>
+            <div class="w-px bg-white/08"></div>
+            <div class="text-center">
+              <div class="font-syne font-700 text-2xl text-neon">0</div>
+              <div class="text-[10px] text-white/35 mt-0.5">Critical Bugs (avg)</div>
+            </div>
+          </div>
+          <div class="absolute bottom-6 right-6 opacity-10">
+            <svg width="100" height="60" viewBox="0 0 100 60" fill="none">
+              <polyline points="0,45 20,30 40,38 60,15 80,22 100,5" stroke="#5affd8" stroke-width="1.5" fill="none"/>
+              <circle cx="60" cy="15" r="3" fill="#5affd8"/>
+            </svg>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- ── PROCESS SECTION ───────────────────────── -->
+    <section id="process" class="py-24 px-6 md:px-14 max-w-7xl mx-auto border-t border-white/05">
+      <div class="text-center mb-14" data-aos="fade-up">
+        <span class="section-label">How We Work</span>
+        <h2 class="font-syne font-800 text-4xl md:text-5xl text-white mt-3">
+          Our <span class="grad-text">Process</span>
+        </h2>
+      </div>
+      <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
+        <div class="text-center" data-aos="fade-up" data-aos-delay="0">
+          <div class="w-12 h-12 rounded-full mx-auto mb-4 flex items-center justify-center font-syne font-700 text-lg"
+               style="background: linear-gradient(135deg,#7c6bff,#c86bff); color:#fff;">01</div>
+          <h4 class="font-syne font-700 text-white mb-2">Discovery</h4>
+          <p class="text-white/40 text-sm">Deep-dive into your goals, users, and technical requirements.</p>
+        </div>
+        <div class="text-center" data-aos="fade-up" data-aos-delay="100">
+          <div class="w-12 h-12 rounded-full mx-auto mb-4 flex items-center justify-center font-syne font-700 text-lg"
+               style="background: linear-gradient(135deg,#7c6bff,#c86bff); color:#fff;">02</div>
+          <h4 class="font-syne font-700 text-white mb-2">Design</h4>
+          <p class="text-white/40 text-sm">Wireframes, prototypes, and high-fidelity UI that wows.</p>
+        </div>
+        <div class="text-center" data-aos="fade-up" data-aos-delay="200">
+          <div class="w-12 h-12 rounded-full mx-auto mb-4 flex items-center justify-center font-syne font-700 text-lg"
+               style="background: linear-gradient(135deg,#7c6bff,#c86bff); color:#fff;">03</div>
+          <h4 class="font-syne font-700 text-white mb-2">Build</h4>
+          <p class="text-white/40 text-sm">Agile sprints, clean code, and continuous delivery.</p>
+        </div>
+        <div class="text-center" data-aos="fade-up" data-aos-delay="300">
+          <div class="w-12 h-12 rounded-full mx-auto mb-4 flex items-center justify-center font-syne font-700 text-lg"
+               style="background: linear-gradient(135deg,#7c6bff,#c86bff); color:#fff;">04</div>
+          <h4 class="font-syne font-700 text-white mb-2">Launch & Support</h4>
+          <p class="text-white/40 text-sm">Deploy with confidence, monitor 24/7, and iterate fast.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ── FOOTER CTA ─────────────────────────────── -->
+    <section id="contact" class="py-28 px-6 text-center relative overflow-hidden border-t border-white/05" data-aos="fade-up">
+      <div class="orb orb-2" style="opacity:0.12; bottom:-100px; top:auto; right:10%; left:auto;"></div>
+      <div class="relative z-10 max-w-2xl mx-auto">
+        <span class="section-label">Ready to Start?</span>
+        <h2 class="font-syne font-800 text-4xl md:text-6xl text-white mt-4 mb-6">
+          Let's Build <span class="grad-text">Something</span> Great
+        </h2>
+        <p class="text-white/45 mb-8 text-lg">Log in to the client portal to submit your project and track progress in real time.</p>
+        <button class="btn-primary px-10 py-4 text-base" onclick="document.getElementById('client-access-btn').click()">
+          Get Started — It's Free
+        </button>
+      </div>
+    </section>
+
+    <!-- Footer bar -->
+    <footer class="border-t border-white/05 py-6 px-14 flex items-center justify-between text-xs text-white/25 font-dm">
+      <span>© 2026 Shaikh Infotech Digital Agency. All rights reserved.</span>
+      <span>Built with ♥ and too much caffeine.</span>
+    </footer>
+
+  </div><!-- /#landing-page -->
+
+
+  <!-- ╔══════════════════════════════════════════════╗ -->
+  <!-- ║  AUTHENTICATION MODAL (Login / Sign Up)      ║ -->
+  <!-- ╚══════════════════════════════════════════════╝ -->
+  <div id="auth-modal-backdrop">
+    <div id="auth-modal" class="glass-strong">
+
+      <!-- Modal header -->
+      <div class="flex items-center justify-between mb-6">
+        <div>
+          <h3 class="font-syne font-700 text-xl text-white" id="modal-title">Welcome Back</h3>
+          <p class="text-white/40 text-sm mt-0.5" id="modal-subtitle">Sign in to your client portal</p>
+        </div>
+        <button id="modal-close-btn" class="w-8 h-8 rounded-full flex items-center justify-center bg-white/05 hover:bg-white/10 transition-colors text-white/50 hover:text-white">
+          ✕
+        </button>
+      </div>
+
+      <!-- Tab switcher -->
+      <div class="flex p-1 bg-white/05 rounded-xl mb-6">
+        <button id="tab-login"  class="flex-1 py-2 rounded-lg text-sm font-syne font-600 transition-all duration-250 text-white"
+                style="background: linear-gradient(135deg,#7c6bff,#c86bff); box-shadow: 0 4px 12px rgba(124,107,255,0.3);">
+          Login
+        </button>
+        <button id="tab-signup" class="flex-1 py-2 rounded-lg text-sm font-syne font-600 transition-all duration-250 text-white/50 hover:text-white">
+          Sign Up
+        </button>
+      </div>
+
+      <!-- LOGIN FORM -->
+      <div id="form-login">
+        <div class="flex flex-col gap-3">
+          <input id="login-email"    type="email"    class="field" placeholder="Email address" />
+          <input id="login-password" type="password" class="field" placeholder="Password" />
+        </div>
+        <div class="mt-1 text-right">
+          <a href="#" class="text-xs text-accent/80 hover:text-accent transition-colors">Forgot password?</a>
+        </div>
+        <button id="login-btn" class="btn-primary w-full mt-5 py-3" onclick="handleLogin()">
+          Sign In
+        </button>
+      </div>
+
+      <!-- SIGNUP FORM -->
+      <div id="form-signup" class="hidden">
+        <div class="flex flex-col gap-3">
+          <input id="signup-name"     type="text"     class="field" placeholder="Full name" />
+          <input id="signup-email"    type="email"    class="field" placeholder="Email address" />
+          <input id="signup-password" type="password" class="field" placeholder="Password (min 6 chars)" />
+        </div>
+        <button id="signup-btn" class="btn-primary w-full mt-5 py-3" onclick="handleSignup()">
+          Create Account
+        </button>
+      </div>
+
+      <!-- Error message area -->
+      <p id="auth-error" class="text-red-400 text-xs mt-3 text-center hidden"></p>
+
+    </div>
+  </div>
+
+
+  <!-- ╔══════════════════════════════════════════════╗ -->
+  <!-- ║       CLIENT DASHBOARD (Post-Login)          ║ -->
+  <!-- ╚══════════════════════════════════════════════╝ -->
+  <div id="dashboard">
+
+    <!-- Dashboard Topbar -->
+    <div class="glass sticky top-0 z-50 flex items-center justify-between px-6 py-3 mb-8 rounded-2xl mx-0 md:mx-4 border border-white/08">
+      <div class="flex items-center gap-3">
+        <span class="w-8 h-8 rounded-lg flex items-center justify-center"
+              style="background: linear-gradient(135deg,#7c6bff,#c86bff);">
+          <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M7 1L13 4.5V9.5L7 13L1 9.5V4.5L7 1Z" fill="white" fill-opacity="0.85"/></svg>
+        </span>
+        <span class="font-syne font-700 text-white text-base">SHAIKH INFOTECH</span>
+        <span class="text-white/20 text-xs mx-1">/</span>
+        <span class="text-white/40 text-xs font-dm">Client Portal</span>
+      </div>
+      <div class="flex items-center gap-3">
+        <div class="text-right hidden sm:block">
+          <div id="user-name-display" class="text-white text-sm font-dm"></div>
+          <div id="user-email-display" class="text-white/35 text-xs font-dm"></div>
+        </div>
+        <button id="logout-btn" onclick="handleLogout()"
+                class="text-xs text-white/40 hover:text-white/80 border border-white/10 hover:border-white/25 px-3 py-1.5 rounded-lg transition-all font-syne">
+          Logout
+        </button>
+      </div>
+    </div>
+
+    <!-- Dashboard greeting -->
+    <div class="px-6 mb-8">
+      <h1 class="font-syne font-700 text-3xl md:text-4xl text-white mb-1">
+        Good to see you <span id="dashboard-name" class="grad-text">there</span> 👋
+      </h1>
+      <p class="text-white/40 text-sm">Submit a new project request or track your existing ones below.</p>
+    </div>
+
+    <!-- Dashboard grid: form + tracker -->
+    <div class="px-6 grid grid-cols-1 lg:grid-cols-2 gap-6">
+
+      <!-- ── LEFT: NEW REQUEST FORM ──────────────── -->
+      <div class="glass rounded-2xl p-6 md:p-8 border border-white/08">
+        <div class="flex items-center gap-3 mb-6">
+          <div class="w-9 h-9 rounded-xl flex items-center justify-center"
+               style="background: linear-gradient(135deg,#7c6bff,#c86bff);">
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="white"><path d="M8 2v12M2 8h12" stroke="white" stroke-width="2" stroke-linecap="round"/></svg>
+          </div>
+          <div>
+            <h3 class="font-syne font-700 text-white text-lg">New Project Request</h3>
+            <p class="text-white/35 text-xs">Tell us what you need — we'll get on it.</p>
+          </div>
+        </div>
+
+        <div class="space-y-4">
+
+          <!-- Service type -->
+          <div>
+            <label class="block text-xs text-white/40 mb-1.5 font-syne uppercase tracking-wider">Service Type</label>
+            <select id="req-service" class="field">
+              <option value="">Select a service…</option>
+              <option value="Web Building">🌐 Web Building</option>
+              <option value="App Build">📱 App Build</option>
+              <option value="Cloud Services">☁️ Cloud Services (AWS / Azure / GCP)</option>
+              <option value="Web Testing">🐛 Web Testing & Bug Fixing</option>
+            </select>
+          </div>
+
+          <!-- Project title -->
+          <div>
+            <label class="block text-xs text-white/40 mb-1.5 font-syne uppercase tracking-wider">Project Title</label>
+            <input id="req-title" type="text" class="field" placeholder="e.g. E-commerce website redesign" />
+          </div>
+
+          <!-- Details -->
+          <div>
+            <label class="block text-xs text-white/40 mb-1.5 font-syne uppercase tracking-wider">Project Details</label>
+            <textarea id="req-details" class="field resize-none" rows="5"
+                      placeholder="Describe your requirements in detail — timeline, tech stack preferences, current issues, etc."></textarea>
+          </div>
+
+          <!-- Priority -->
+          <div>
+            <label class="block text-xs text-white/40 mb-1.5 font-syne uppercase tracking-wider">Priority</label>
+            <div class="flex gap-2">
+              <label class="flex-1 cursor-pointer">
+                <input type="radio" name="priority" value="Normal" class="hidden" checked />
+                <div class="priority-btn text-center py-2 rounded-lg border border-white/10 text-sm text-white/50 hover:text-white hover:border-accent/50 transition-all"
+                     onclick="setPriority(this, 'Normal')">Normal</div>
+              </label>
+              <label class="flex-1 cursor-pointer">
+                <input type="radio" name="priority" value="High" class="hidden" />
+                <div class="priority-btn text-center py-2 rounded-lg border border-white/10 text-sm text-white/50 hover:text-white hover:border-amber-400/50 transition-all"
+                     onclick="setPriority(this, 'High')">High</div>
+              </label>
+              <label class="flex-1 cursor-pointer">
+                <input type="radio" name="priority" value="Urgent" class="hidden" />
+                <div class="priority-btn text-center py-2 rounded-lg border border-white/10 text-sm text-white/50 hover:text-white hover:border-red-400/50 transition-all"
+                     onclick="setPriority(this, 'Urgent')">🔥 Urgent</div>
+              </label>
+            </div>
+          </div>
+
+          <button id="submit-req-btn" class="btn-primary w-full py-3.5 mt-2" onclick="submitRequest()">
+            Submit Request →
+          </button>
+        </div>
+      </div>
+
+      <!-- ── RIGHT: REQUEST TRACKER ─────────────── -->
+      <div class="glass rounded-2xl p-6 md:p-8 border border-white/08">
+        <div class="flex items-center justify-between mb-6">
+          <div class="flex items-center gap-3">
+            <div class="w-9 h-9 rounded-xl flex items-center justify-center"
+                 style="background: linear-gradient(135deg,rgba(90,255,216,0.2),rgba(124,107,255,0.2)); border: 1px solid rgba(90,255,216,0.2);">
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                <circle cx="8" cy="8" r="6.5" stroke="#5affd8" stroke-width="1.2"/>
+                <path d="M5 8l2 2 4-4" stroke="#5affd8" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+            </div>
+            <div>
+              <h3 class="font-syne font-700 text-white text-lg">Your Requests</h3>
+              <div class="flex items-center gap-1.5">
+                <span class="w-1.5 h-1.5 rounded-full bg-neon animate-pulse"></span>
+                <span class="text-white/35 text-xs">Live updates</span>
+              </div>
+            </div>
+          </div>
+          <span id="request-count" class="text-xs text-white/30 font-syne"></span>
+        </div>
+
+        <!-- Request list -->
+        <div id="requests-list" class="space-y-0 overflow-y-auto" style="max-height: 520px;">
+          <!-- populated by JS -->
+          <div id="requests-empty" class="text-center py-12 text-white/25 hidden">
+            <div class="text-4xl mb-3">📭</div>
+            <div class="font-syne text-sm">No requests yet.</div>
+            <div class="text-xs mt-1">Submit your first project →</div>
+          </div>
+          <div id="requests-loading" class="text-center py-8">
+            <div class="spinner mx-auto mb-3" style="width:28px;height:28px;border-width:2.5px;"></div>
+            <div class="text-white/30 text-xs font-dm">Fetching your requests…</div>
+          </div>
+        </div>
+
+      </div>
+    </div><!-- /dashboard grid -->
+
+    <!-- Bottom padding -->
+    <div class="h-16"></div>
+  </div><!-- /#dashboard -->
+
+
+  <!-- ═══════════════════════════════════════════════
+       JAVASCRIPT — Firebase, Auth, DB, Animations
+  ════════════════════════════════════════════════ -->
+  <script>
+  /* ══════════════════════════════════════════════════
+     FIREBASE CONFIGURATION
+     ⚠️  Replace with your own Firebase project config
+  ══════════════════════════════════════════════════ */
+ const firebaseConfig = {
+  apiKey: "AIzaSyCN8vtYDAUCYLOFOTvW83-bZK85UxKxBVI",
+  authDomain: "shaikh-infotech-1446.firebaseapp.com",
+  databaseURL: "https://shaikh-infotech-1446-default-rtdb.firebaseio.com",
+  projectId: "shaikh-infotech-1446",
+  storageBucket: "shaikh-infotech-1446.firebasestorage.app",
+  messagingSenderId: "305279794256",
+  appId: "1:305279794256:web:34744e39e01f9519832555",
+  measurementId: "G-Q4B4S42FBH"
+};
+
+  /* ── Initialize Firebase ─────────────────────────── */
+  firebase.initializeApp(firebaseConfig);
+  const auth = firebase.auth();
+  const db   = firebase.database();
+
+  /* ══════════════════════════════════════════════════
+     GLOBAL STATE
+  ══════════════════════════════════════════════════ */
+  let currentUser    = null;
+  let selectedPriority = 'Normal';
+  let requestsListener = null; // Firebase listener ref (for cleanup)
+
+  /* ══════════════════════════════════════════════════
+     CUSTOM CURSOR
+  ══════════════════════════════════════════════════ */
+  const dot  = document.getElementById('cursor-dot');
+  const ring = document.getElementById('cursor-ring');
+  let cx = 0, cy = 0, rx = 0, ry = 0;
+
+  document.addEventListener('mousemove', (e) => {
+    cx = e.clientX; cy = e.clientY;
+    dot.style.transform  = `translate(${cx - 4}px, ${cy - 4}px)`;
+    ring.style.transform = `translate(${rx - 18}px, ${ry - 18}px)`;
+  });
+
+  // Smooth ring lag
+  function animateRing() {
+    rx += (cx - rx) * 0.12;
+    ry += (cy - ry) * 0.12;
+    ring.style.transform = `translate(${rx - 18}px, ${ry - 18}px)`;
+    requestAnimationFrame(animateRing);
+  }
+  animateRing();
+
+  /* ══════════════════════════════════════════════════
+     PARTICLE CANVAS
+  ══════════════════════════════════════════════════ */
+  (function initParticles() {
+    const canvas = document.getElementById('particle-canvas');
+    const ctx    = canvas.getContext('2d');
+    let W, H, particles = [];
+
+    function resize() {
+      W = canvas.width  = window.innerWidth;
+      H = canvas.height = window.innerHeight;
+    }
+    resize();
+    window.addEventListener('resize', resize);
+
+    class Particle {
+      constructor() { this.reset(); }
+      reset() {
+        this.x  = Math.random() * W;
+        this.y  = Math.random() * H;
+        this.r  = Math.random() * 1.4 + 0.3;
+        this.dx = (Math.random() - 0.5) * 0.35;
+        this.dy = (Math.random() - 0.5) * 0.35;
+        this.a  = Math.random() * 0.5 + 0.1;
+        // colour palette: accent purple / neon / white
+        const palettes = ['124,107,255', '90,255,216', '200,107,255', '232,232,240'];
+        this.c  = palettes[Math.floor(Math.random() * palettes.length)];
+      }
+      draw() {
+        ctx.beginPath();
+        ctx.arc(this.x, this.y, this.r, 0, Math.PI * 2);
+        ctx.fillStyle = `rgba(${this.c},${this.a})`;
+        ctx.fill();
+      }
+      update() {
+        this.x += this.dx;
+        this.y += this.dy;
+        if (this.x < 0 || this.x > W || this.y < 0 || this.y > H) this.reset();
+      }
+    }
+
+    // Create 140 particles
+    for (let i = 0; i < 140; i++) particles.push(new Particle());
+
+    // Draw connection lines between nearby particles
+    function drawLines() {
+      for (let i = 0; i < particles.length; i++) {
+        for (let j = i + 1; j < particles.length; j++) {
+          const dx = particles[i].x - particles[j].x;
+          const dy = particles[i].y - particles[j].y;
+          const dist = Math.sqrt(dx*dx + dy*dy);
+          if (dist < 90) {
+            ctx.beginPath();
+            ctx.moveTo(particles[i].x, particles[i].y);
+            ctx.lineTo(particles[j].x, particles[j].y);
+            ctx.strokeStyle = `rgba(124,107,255,${0.06 * (1 - dist/90)})`;
+            ctx.lineWidth = 0.6;
+            ctx.stroke();
+          }
+        }
+      }
+    }
+
+    function loop() {
+      ctx.clearRect(0, 0, W, H);
+      particles.forEach(p => { p.update(); p.draw(); });
+      drawLines();
+      requestAnimationFrame(loop);
+    }
+    loop();
+  })();
+
+  /* ══════════════════════════════════════════════════
+     NAVBAR SCROLL EFFECT
+  ══════════════════════════════════════════════════ */
+  window.addEventListener('scroll', () => {
+    document.getElementById('navbar').classList.toggle('scrolled', window.scrollY > 40);
+  });
+
+  /* ══════════════════════════════════════════════════
+     GSAP HERO ENTRANCE ANIMATION
+  ══════════════════════════════════════════════════ */
+  window.addEventListener('load', () => {
+    gsap.timeline({ defaults: { ease: 'power3.out' } })
+      .to('#hero-eyebrow',  { opacity: 1, y: 0, duration: 0.8, delay: 0.2 })
+      .to('#hero-headline', { opacity: 1, y: 0, duration: 1,   }, '-=0.5')
+      .to('#hero-sub',      { opacity: 1, y: 0, duration: 0.8  }, '-=0.6')
+      .to('#hero-ctas',     { opacity: 1, y: 0, duration: 0.7  }, '-=0.5')
+      .to('#hero-stats',    { opacity: 1, y: 0, duration: 0.7  }, '-=0.4');
+
+    // set initial hidden states
+    gsap.set(['#hero-eyebrow','#hero-headline','#hero-sub','#hero-ctas','#hero-stats'], { y: 28 });
+  });
+
+  /* ══════════════════════════════════════════════════
+     AOS INIT
+  ══════════════════════════════════════════════════ */
+  AOS.init({ duration: 700, easing: 'ease-out-cubic', once: true, offset: 60 });
+
+  /* ══════════════════════════════════════════════════
+     MODAL OPEN / CLOSE
+  ══════════════════════════════════════════════════ */
+  function openModal() {
+    document.getElementById('auth-modal-backdrop').classList.add('open');
+    document.body.style.overflow = 'hidden';
+  }
+  function closeModal() {
+    document.getElementById('auth-modal-backdrop').classList.remove('open');
+    document.body.style.overflow = '';
+    document.getElementById('auth-error').classList.add('hidden');
+  }
+
+  document.getElementById('client-access-btn').addEventListener('click', openModal);
+  document.getElementById('modal-close-btn').addEventListener('click', closeModal);
+  document.getElementById('auth-modal-backdrop').addEventListener('click', (e) => {
+    if (e.target === e.currentTarget) closeModal();
+  });
+
+  /* ── Tab switcher ──────────────────────────────── */
+  const tabLogin  = document.getElementById('tab-login');
+  const tabSignup = document.getElementById('tab-signup');
+  const formLogin  = document.getElementById('form-login');
+  const formSignup = document.getElementById('form-signup');
+
+  tabLogin.addEventListener('click', () => {
+    tabLogin.style.background  = 'linear-gradient(135deg,#7c6bff,#c86bff)';
+    tabLogin.style.boxShadow   = '0 4px 12px rgba(124,107,255,0.3)';
+    tabLogin.style.color       = '#fff';
+    tabSignup.style.background = 'transparent';
+    tabSignup.style.boxShadow  = 'none';
+    tabSignup.style.color      = 'rgba(255,255,255,0.5)';
+    formLogin.classList.remove('hidden');
+    formSignup.classList.add('hidden');
+    document.getElementById('modal-title').textContent    = 'Welcome Back';
+    document.getElementById('modal-subtitle').textContent = 'Sign in to your client portal';
+    document.getElementById('auth-error').classList.add('hidden');
+  });
+
+  tabSignup.addEventListener('click', () => {
+    tabSignup.style.background = 'linear-gradient(135deg,#7c6bff,#c86bff)';
+    tabSignup.style.boxShadow  = '0 4px 12px rgba(124,107,255,0.3)';
+    tabSignup.style.color      = '#fff';
+    tabLogin.style.background  = 'transparent';
+    tabLogin.style.boxShadow   = 'none';
+    tabLogin.style.color       = 'rgba(255,255,255,0.5)';
+    formSignup.classList.remove('hidden');
+    formLogin.classList.add('hidden');
+    document.getElementById('modal-title').textContent    = 'Create Account';
+    document.getElementById('modal-subtitle').textContent = 'Join the client portal today';
+    document.getElementById('auth-error').classList.add('hidden');
+  });
+
+  /* ══════════════════════════════════════════════════
+     FIREBASE AUTH — LOGIN
+  ══════════════════════════════════════════════════ */
+  function handleLogin() {
+    const email    = document.getElementById('login-email').value.trim();
+    const password = document.getElementById('login-password').value;
+    const btn      = document.getElementById('login-btn');
+
+    if (!email || !password) { showAuthError('Please fill in all fields.'); return; }
+
+    // Show loading state
+    btn.innerHTML = '<span class="spinner"></span>';
+    btn.disabled  = true;
+
+    auth.signInWithEmailAndPassword(email, password)
+      .then(() => {
+        closeModal();
+        showToast('Signed in successfully!', 'success');
+      })
+      .catch((err) => {
+        showAuthError(friendlyAuthError(err.code));
+        btn.innerHTML = 'Sign In';
+        btn.disabled  = false;
+      });
+  }
+
+  /* ══════════════════════════════════════════════════
+     FIREBASE AUTH — SIGN UP
+  ══════════════════════════════════════════════════ */
+  function handleSignup() {
+    const name     = document.getElementById('signup-name').value.trim();
+    const email    = document.getElementById('signup-email').value.trim();
+    const password = document.getElementById('signup-password').value;
+    const btn      = document.getElementById('signup-btn');
+
+    if (!name || !email || !password) { showAuthError('Please fill in all fields.'); return; }
+    if (password.length < 6)          { showAuthError('Password must be at least 6 characters.'); return; }
+
+    btn.innerHTML = '<span class="spinner"></span>';
+    btn.disabled  = true;
+
+    auth.createUserWithEmailAndPassword(email, password)
+      .then((cred) => {
+        // Save user profile to Realtime DB
+        return db.ref(`users/${cred.user.uid}`).set({
+          name:      name,
+          email:     email,
+          createdAt: Date.now(),
+        });
+      })
+      .then(() => {
+        closeModal();
+        showToast('Account created! Welcome to SHAIKH INFOTECH 🎉', 'success');
+      })
+      .catch((err) => {
+        showAuthError(friendlyAuthError(err.code));
+        btn.innerHTML = 'Create Account';
+        btn.disabled  = false;
+      });
+  }
+
+  /* ══════════════════════════════════════════════════
+     FIREBASE AUTH — LOGOUT
+  ══════════════════════════════════════════════════ */
+  function handleLogout() {
+    // Detach DB listener before logging out
+    if (requestsListener && currentUser) {
+      db.ref(`requests/${currentUser.uid}`).off('value', requestsListener);
+    }
+    auth.signOut().then(() => {
+      showLandingPage();
+      showToast('Logged out. See you soon!', 'success');
+      localStorage.removeItem('shaikh infotech_user');
+    });
+  }
+
+  /* ══════════════════════════════════════════════════
+     AUTH STATE OBSERVER — persists session
+  ══════════════════════════════════════════════════ */
+  auth.onAuthStateChanged((user) => {
+    if (user) {
+      currentUser = user;
+
+      // Cache minimal session in localStorage
+      localStorage.setItem('shaikh infotech_user', JSON.stringify({ uid: user.uid, email: user.email }));
+
+      // Fetch name from DB then show dashboard
+      db.ref(`users/${user.uid}/name`).once('value').then((snap) => {
+        const name = snap.val() || user.email.split('@')[0];
+        showDashboard(user, name);
+      });
+    } else {
+      currentUser = null;
+      localStorage.removeItem('shaikh infotech_user');
+    }
+  });
+
+  /* ══════════════════════════════════════════════════
+     SHOW / HIDE VIEWS
+  ══════════════════════════════════════════════════ */
+  function showDashboard(user, name) {
+    document.getElementById('landing-page').style.display = 'none';
+    const dash = document.getElementById('dashboard');
+    dash.style.display = 'block';
+
+    // Animate dashboard in
+    gsap.fromTo(dash, { opacity: 0, y: 20 }, { opacity: 1, y: 0, duration: 0.6, ease: 'power3.out' });
+
+    // Populate user info
+    document.getElementById('user-name-display').textContent  = name;
+    document.getElementById('user-email-display').textContent = user.email;
+    document.getElementById('dashboard-name').textContent     = name.split(' ')[0];
+
+    // Load requests in real-time
+    loadUserRequests(user.uid);
+  }
+
+  function showLandingPage() {
+    document.getElementById('dashboard').style.display    = 'none';
+    document.getElementById('landing-page').style.display = 'block';
+    // Reset form
+    document.getElementById('req-service').value  = '';
+    document.getElementById('req-title').value    = '';
+    document.getElementById('req-details').value  = '';
+  }
+
+  /* ══════════════════════════════════════════════════
+     PRIORITY SELECTOR (UI)
+  ══════════════════════════════════════════════════ */
+  function setPriority(el, value) {
+    selectedPriority = value;
+    document.querySelectorAll('.priority-btn').forEach(btn => {
+      btn.style.borderColor = 'rgba(255,255,255,0.1)';
+      btn.style.color       = 'rgba(232,232,240,0.5)';
+      btn.style.background  = 'transparent';
+    });
+    const colors = { Normal: '#7c6bff', High: '#f59e0b', Urgent: '#ef4444' };
+    el.style.borderColor = colors[value] + '70';
+    el.style.color       = colors[value];
+    el.style.background  = colors[value] + '15';
+  }
+
+  /* ══════════════════════════════════════════════════
+     SUBMIT PROJECT REQUEST → Firebase Realtime DB
+  ══════════════════════════════════════════════════ */
+  function submitRequest() {
+    const service = document.getElementById('req-service').value;
+    const title   = document.getElementById('req-title').value.trim();
+    const details = document.getElementById('req-details').value.trim();
+    const btn     = document.getElementById('submit-req-btn');
+
+    if (!service)  { showToast('Please select a service type.', 'error'); return; }
+    if (!title)    { showToast('Please add a project title.',   'error'); return; }
+    if (!details)  { showToast('Please describe your project.', 'error'); return; }
+    if (!currentUser) { showToast('Session expired. Please log in again.', 'error'); return; }
+
+    btn.innerHTML = '<span class="spinner"></span> Submitting…';
+    btn.disabled  = true;
+
+    const requestData = {
+      uid:       currentUser.uid,
+      email:     currentUser.email,
+      service:   service,
+      title:     title,
+      details:   details,
+      priority:  selectedPriority,
+      status:    'Pending',
+      createdAt: Date.now(),
+    };
+
+    // Push to /requests/{uid}/{autoId}
+    db.ref(`requests/${currentUser.uid}`).push(requestData)
+      .then(() => {
+        showToast('Request submitted! We\'ll be in touch soon. ✨', 'success');
+        // Reset form
+        document.getElementById('req-service').value  = '';
+        document.getElementById('req-title').value    = '';
+        document.getElementById('req-details').value  = '';
+        document.querySelectorAll('.priority-btn').forEach((b, i) => {
+          b.style.borderColor = 'rgba(255,255,255,0.1)';
+          b.style.color = 'rgba(232,232,240,0.5)';
+          b.style.background = 'transparent';
+          if (i === 0) setPriority(b, 'Normal');
+        });
+        selectedPriority = 'Normal';
+      })
+      .catch((err) => showToast('Error: ' + err.message, 'error'))
+      .finally(() => {
+        btn.innerHTML = 'Submit Request →';
+        btn.disabled  = false;
+      });
+  }
+
+  /* ══════════════════════════════════════════════════
+     LOAD USER REQUESTS — Real-Time Listener
+  ══════════════════════════════════════════════════ */
+  function loadUserRequests(uid) {
+    const listEl    = document.getElementById('requests-list');
+    const emptyEl   = document.getElementById('requests-empty');
+    const loadingEl = document.getElementById('requests-loading');
+    const countEl   = document.getElementById('request-count');
+
+    loadingEl.style.display = 'block';
+    emptyEl.classList.add('hidden');
+
+    // Detach any previous listener
+    if (requestsListener) db.ref(`requests/${uid}`).off('value', requestsListener);
+
+    requestsListener = db.ref(`requests/${uid}`).orderByChild('createdAt').on('value', (snap) => {
+      loadingEl.style.display = 'none';
+
+      // Remove old request cards (keep loading/empty divs)
+      listEl.querySelectorAll('.request-card').forEach(el => el.remove());
+
+      if (!snap.exists()) {
+        emptyEl.classList.remove('hidden');
+        countEl.textContent = '';
+        return;
+      }
+
+      emptyEl.classList.add('hidden');
+      const requests = [];
+      snap.forEach(child => requests.push({ id: child.key, ...child.val() }));
+      requests.reverse(); // newest first
+
+      countEl.textContent = `${requests.length} request${requests.length !== 1 ? 's' : ''}`;
+
+      requests.forEach((req, idx) => {
+        const card = buildRequestCard(req);
+        card.style.animationDelay = `${idx * 60}ms`;
+        listEl.appendChild(card);
+      });
+    });
+  }
+
+  /* ── Build a request card DOM element ───────────── */
+  function buildRequestCard(req) {
+    const card = document.createElement('div');
+    card.className = 'request-card glass border border-white/07';
+
+    const statusClass  = 'status-' + (req.status || 'pending').toLowerCase().replace(' ', '');
+    const priorityColor = { Normal: '#7c6bff', High: '#f59e0b', Urgent: '#ef4444' }[req.priority] || '#7c6bff';
+    const date = new Date(req.createdAt).toLocaleDateString('en-US', { month:'short', day:'numeric', year:'numeric' });
+
+    card.innerHTML = `
+      <div class="flex items-start justify-between gap-3">
+        <div class="flex-1 min-w-0">
+          <div class="flex items-center gap-2 flex-wrap mb-1">
+            <span class="font-syne font-600 text-white text-sm truncate">${escHtml(req.title)}</span>
+            <span class="status-pill ${statusClass}">${req.status || 'Pending'}</span>
+          </div>
+          <div class="text-white/40 text-xs mb-1">${escHtml(req.service)}</div>
+          <div class="text-white/30 text-xs line-clamp-2 leading-relaxed">${escHtml(req.details)}</div>
+        </div>
+        <div class="flex flex-col items-end gap-1.5 shrink-0">
+          <span class="text-[10px] text-white/25 font-dm">${date}</span>
+          <span class="text-[10px] px-2 py-0.5 rounded-full border" style="border-color:${priorityColor}40; color:${priorityColor}; background:${priorityColor}12;">${req.priority || 'Normal'}</span>
+        </div>
+      </div>`;
+    return card;
+  }
+
+  /* ══════════════════════════════════════════════════
+     UTILITY — TOAST
+  ══════════════════════════════════════════════════ */
+  let toastTimer;
+  function showToast(msg, type = 'success') {
+    const el = document.getElementById('toast');
+    el.textContent = msg;
+    el.className   = `show ${type}`;
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => { el.classList.remove('show'); }, 3800);
+  }
+
+  /* ── Auth error → friendly message ──────────────── */
+  function friendlyAuthError(code) {
+    const map = {
+      'auth/user-not-found':      'No account found with this email.',
+      'auth/wrong-password':      'Incorrect password. Please try again.',
+      'auth/email-already-in-use':'This email is already registered.',
+      'auth/weak-password':       'Password must be at least 6 characters.',
+      'auth/invalid-email':       'Please enter a valid email address.',
+      'auth/too-many-requests':   'Too many attempts. Please wait a moment.',
+      'auth/invalid-credential':  'Invalid email or password.',
+    };
+    return map[code] || 'Authentication failed. Please try again.';
+  }
+
+  function showAuthError(msg) {
+    const el = document.getElementById('auth-error');
+    el.textContent = msg;
+    el.classList.remove('hidden');
+  }
+
+  /* ── XSS-safe HTML escape ────────────────────────── */
+  function escHtml(str) {
+    return String(str || '')
+      .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+      .replace(/"/g,'&quot;').replace(/'/g,'&#039;');
+  }
+
+  /* ── Enter key support on login form ────────────── */
+  ['login-email','login-password'].forEach(id => {
+    document.getElementById(id).addEventListener('keydown', e => {
+      if (e.key === 'Enter') handleLogin();
+    });
+  });
+  ['signup-name','signup-email','signup-password'].forEach(id => {
+    document.getElementById(id).addEventListener('keydown', e => {
+      if (e.key === 'Enter') handleSignup();
+    });
+  });
+
+  </script>
+</body>
+</html>
